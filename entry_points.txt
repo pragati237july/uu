@@ -1,4 +1,2 @@
-[console_scripts]
-pip=pip._internal.cli.main:main
-pip3=pip._internal.cli.main:main
-
+[pytest11]
+anyio = anyio.pytest_plugin
