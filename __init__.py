@@ -1,139 +1,103 @@
-"""
-Package containing all pip commands
-"""
-
 from __future__ import annotations
 
-import importlib
-from collections import namedtuple
-from typing import Any
+import collections
+import logging
+from collections.abc import Generator
+from dataclasses import dataclass
 
-from pip._internal.cli.base_command import Command
+from pip._internal.cli.progress_bars import BarType, get_install_progress_renderer
+from pip._internal.utils.logging import indent_log
 
-CommandInfo = namedtuple("CommandInfo", "module_path, class_name, summary")
+from .req_file import parse_requirements
+from .req_install import InstallRequirement
+from .req_set import RequirementSet
 
-# This dictionary does a bunch of heavy lifting for help output:
-# - Enables avoiding additional (costly) imports for presenting `--help`.
-# - The ordering matters for help display.
-#
-# Even though the module path starts with the same "pip._internal.commands"
-# prefix, the full path makes testing easier (specifically when modifying
-# `commands_dict` in test setup / teardown).
-commands_dict: dict[str, CommandInfo] = {
-    "install": CommandInfo(
-        "pip._internal.commands.install",
-        "InstallCommand",
-        "Install packages.",
-    ),
-    "lock": CommandInfo(
-        "pip._internal.commands.lock",
-        "LockCommand",
-        "Generate a lock file.",
-    ),
-    "download": CommandInfo(
-        "pip._internal.commands.download",
-        "DownloadCommand",
-        "Download packages.",
-    ),
-    "uninstall": CommandInfo(
-        "pip._internal.commands.uninstall",
-        "UninstallCommand",
-        "Uninstall packages.",
-    ),
-    "freeze": CommandInfo(
-        "pip._internal.commands.freeze",
-        "FreezeCommand",
-        "Output installed packages in requirements format.",
-    ),
-    "inspect": CommandInfo(
-        "pip._internal.commands.inspect",
-        "InspectCommand",
-        "Inspect the python environment.",
-    ),
-    "list": CommandInfo(
-        "pip._internal.commands.list",
-        "ListCommand",
-        "List installed packages.",
-    ),
-    "show": CommandInfo(
-        "pip._internal.commands.show",
-        "ShowCommand",
-        "Show information about installed packages.",
-    ),
-    "check": CommandInfo(
-        "pip._internal.commands.check",
-        "CheckCommand",
-        "Verify installed packages have compatible dependencies.",
-    ),
-    "config": CommandInfo(
-        "pip._internal.commands.configuration",
-        "ConfigurationCommand",
-        "Manage local and global configuration.",
-    ),
-    "search": CommandInfo(
-        "pip._internal.commands.search",
-        "SearchCommand",
-        "Search PyPI for packages.",
-    ),
-    "cache": CommandInfo(
-        "pip._internal.commands.cache",
-        "CacheCommand",
-        "Inspect and manage pip's wheel cache.",
-    ),
-    "index": CommandInfo(
-        "pip._internal.commands.index",
-        "IndexCommand",
-        "Inspect information available from package indexes.",
-    ),
-    "wheel": CommandInfo(
-        "pip._internal.commands.wheel",
-        "WheelCommand",
-        "Build wheels from your requirements.",
-    ),
-    "hash": CommandInfo(
-        "pip._internal.commands.hash",
-        "HashCommand",
-        "Compute hashes of package archives.",
-    ),
-    "completion": CommandInfo(
-        "pip._internal.commands.completion",
-        "CompletionCommand",
-        "A helper command used for command completion.",
-    ),
-    "debug": CommandInfo(
-        "pip._internal.commands.debug",
-        "DebugCommand",
-        "Show information useful for debugging.",
-    ),
-    "help": CommandInfo(
-        "pip._internal.commands.help",
-        "HelpCommand",
-        "Show help for commands.",
-    ),
-}
+__all__ = [
+    "RequirementSet",
+    "InstallRequirement",
+    "parse_requirements",
+    "install_given_reqs",
+]
+
+logger = logging.getLogger(__name__)
 
 
-def create_command(name: str, **kwargs: Any) -> Command:
+@dataclass(frozen=True)
+class InstallationResult:
+    name: str
+
+
+def _validate_requirements(
+    requirements: list[InstallRequirement],
+) -> Generator[tuple[str, InstallRequirement], None, None]:
+    for req in requirements:
+        assert req.name, f"invalid to-be-installed requirement: {req}"
+        yield req.name, req
+
+
+def install_given_reqs(
+    requirements: list[InstallRequirement],
+    root: str | None,
+    home: str | None,
+    prefix: str | None,
+    warn_script_location: bool,
+    use_user_site: bool,
+    pycompile: bool,
+    progress_bar: BarType,
+) -> list[InstallationResult]:
     """
-    Create an instance of the Command class with the given name.
+    Install everything in the given list.
+
+    (to be called after having downloaded and unpacked the packages)
     """
-    module_path, class_name, summary = commands_dict[name]
-    module = importlib.import_module(module_path)
-    command_class = getattr(module, class_name)
-    command = command_class(name=name, summary=summary, **kwargs)
+    to_install = collections.OrderedDict(_validate_requirements(requirements))
 
-    return command
+    if to_install:
+        logger.info(
+            "Installing collected packages: %s",
+            ", ".join(to_install.keys()),
+        )
 
+    installed = []
 
-def get_similar_commands(name: str) -> str | None:
-    """Command name auto-correct."""
-    from difflib import get_close_matches
+    show_progress = logger.isEnabledFor(logging.INFO) and len(to_install) > 1
 
-    name = name.lower()
+    items = iter(to_install.values())
+    if show_progress:
+        renderer = get_install_progress_renderer(
+            bar_type=progress_bar, total=len(to_install)
+        )
+        items = renderer(items)
 
-    close_commands = get_close_matches(name, commands_dict.keys())
+    with indent_log():
+        for requirement in items:
+            req_name = requirement.name
+            assert req_name is not None
+            if requirement.should_reinstall:
+                logger.info("Attempting uninstall: %s", req_name)
+                with indent_log():
+                    uninstalled_pathset = requirement.uninstall(auto_confirm=True)
+            else:
+                uninstalled_pathset = None
 
-    if close_commands:
-        return close_commands[0]
-    else:
-        return None
+            try:
+                requirement.install(
+                    root=root,
+                    home=home,
+                    prefix=prefix,
+                    warn_script_location=warn_script_location,
+                    use_user_site=use_user_site,
+                    pycompile=pycompile,
+                )
+            except Exception:
+                # if install did not succeed, rollback previous uninstall
+                if uninstalled_pathset and not requirement.install_succeeded:
+                    uninstalled_pathset.rollback()
+                raise
+            else:
+                if uninstalled_pathset and requirement.install_succeeded:
+                    uninstalled_pathset.commit()
+
+            installed.append(InstallationResult(req_name))
+
+    return installed
