@@ -1,0 +1,3970 @@
+$code = @'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UEBA Sentinel | SOC</title>
+
+<style>
+:root{
+    --bg:#dbe5ee;
+    --bg-soft:#eaf0f5;
+    --sidebar:#cbd8e4;
+    --panel:#f8fbfd;
+    --panel2:#eef3f7;
+    --border:#9eb3c4;
+    --border-strong:#71899c;
+    --text:#162535;
+    --muted:#5c7081;
+    --dim:#7890a1;
+    --cyan:#147da6;
+    --green:#16834e;
+    --yellow:#a97a08;
+    --orange:#c45e00;
+    --red:#b52c3a;
+    --white:#ffffff;
+    --shadow:0 8px 24px rgba(37,64,84,.12);
+}
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:
+        linear-gradient(135deg,#dce7ef 0%,#edf3f7 50%,#d8e3ec 100%);
+    color:var(--text);
+    min-height:100vh;
+}
+
+button,
+input,
+select{
+    font:inherit;
+}
+
+button{
+    cursor:pointer;
+}
+
+.app{
+    min-height:100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+    bottom:0;
+    width:240px;
+    background:rgba(203,216,228,.97);
+    border-right:2px solid var(--border-strong);
+    padding:20px 14px;
+    z-index:50;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    padding:5px 10px 26px;
+}
+
+.brand-mark{
+    width:42px;
+    height:42px;
+    border-radius:10px;
+    display:grid;
+    place-items:center;
+    background:#edf4f8;
+    border:2px solid #6e879a;
+    font-size:20px;
+}
+
+.brand-title{
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:.8px;
+}
+
+.brand-sub{
+    margin-top:4px;
+    color:var(--muted);
+    font-size:9px;
+}
+
+.nav-title{
+    padding:0 11px 8px;
+    color:#557084;
+    font-size:9px;
+    letter-spacing:1.3px;
+    text-transform:uppercase;
+}
+
+.nav{
+    display:grid;
+    gap:6px;
+    margin-bottom:25px;
+}
+
+.nav-item{
+    width:100%;
+    padding:11px 12px;
+    border-radius:8px;
+    border:2px solid transparent;
+    background:transparent;
+    color:#395063;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    text-align:left;
+    transition:.18s;
+}
+
+.nav-item:hover{
+    background:#e5edf3;
+    border-color:#a9bbc9;
+}
+
+.nav-item.active{
+    background:#eef5f9;
+    color:#102333;
+    border-color:#6c879a;
+    box-shadow:0 3px 10px rgba(56,83,101,.10);
+}
+
+.nav-icon{
+    width:19px;
+    text-align:center;
+    font-weight:700;
+}
+
+.sidebar-footer{
+    position:absolute;
+    left:17px;
+    right:17px;
+    bottom:16px;
+    border-top:1px solid #91a8b9;
+    padding:13px 9px;
+    color:#60778a;
+    font-size:9px;
+    line-height:1.8;
+}
+
+/* MAIN */
+
+.main{
+    margin-left:240px;
+    min-height:100vh;
+}
+
+.topbar{
+    height:82px;
+    position:sticky;
+    top:0;
+    z-index:30;
+    background:rgba(243,248,251,.96);
+    backdrop-filter:blur(8px);
+    border-bottom:2px solid var(--border-strong);
+    padding:0 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.top-title h1{
+    font-size:21px;
+}
+
+.top-title p{
+    color:var(--muted);
+    font-size:11px;
+    margin-top:5px;
+}
+
+.backend{
+    border:2px solid #70927e;
+    background:#edf8f1;
+    color:#17633d;
+    border-radius:18px;
+    padding:8px 12px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:10px;
+    font-weight:700;
+}
+
+.backend.offline{
+    border-color:#ad6971;
+    background:#fbefef;
+    color:#8a2632;
+}
+
+.status-dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--green);
+}
+
+.offline .status-dot{
+    background:var(--red);
+}
+
+.content{
+    padding:25px 28px 38px;
+}
+
+.page{
+    display:none;
+}
+
+.page.active{
+    display:block;
+}
+
+.page-heading{
+    margin-bottom:18px;
+}
+
+.page-heading h2{
+    font-size:18px;
+}
+
+.page-heading p{
+    color:var(--muted);
+    margin-top:5px;
+    font-size:11px;
+}
+
+/* KPI */
+
+.kpis{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:14px;
+    margin-bottom:18px;
+}
+
+.kpi{
+    background:rgba(248,251,253,.96);
+    border:2px solid var(--border);
+    border-radius:11px;
+    padding:18px;
+    box-shadow:var(--shadow);
+}
+
+.kpi-label{
+    color:var(--muted);
+    font-size:9px;
+    letter-spacing:.8px;
+}
+
+.kpi-value{
+    margin-top:9px;
+    font-size:29px;
+    font-weight:700;
+}
+
+.kpi-sub{
+    color:var(--dim);
+    font-size:9px;
+    margin-top:6px;
+}
+
+/* PANELS */
+
+.grid{
+    display:grid;
+    grid-template-columns:1.1fr 1fr;
+    gap:16px;
+    margin-bottom:16px;
+}
+
+.panel{
+    background:rgba(248,251,253,.97);
+    border:2px solid var(--border);
+    border-radius:11px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+}
+
+.panel-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 18px;
+    border-bottom:2px solid #bfd0dc;
+}
+
+.panel-head h3{
+    font-size:13px;
+}
+
+.panel-head span{
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.8px;
+    font-size:9px;
+}
+
+.panel-body{
+    padding:18px;
+}
+
+/* RISK */
+
+.risk-layout{
+    display:grid;
+    grid-template-columns:145px 1fr;
+    gap:25px;
+    align-items:center;
+}
+
+.donut{
+    width:138px;
+    height:138px;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    background:conic-gradient(
+        var(--red) 0 25%,
+        var(--orange) 25% 45%,
+        var(--yellow) 45% 65%,
+        #7690a4 65% 100%
+    );
+}
+
+.donut-inner{
+    width:94px;
+    height:94px;
+    border-radius:50%;
+    background:var(--panel);
+    display:grid;
+    place-items:center;
+    text-align:center;
+    border:1px solid #c0cfda;
+}
+
+.donut-inner strong{
+    display:block;
+    font-size:24px;
+}
+
+.donut-inner small{
+    color:var(--muted);
+    font-size:8px;
+}
+
+.legend{
+    display:grid;
+    gap:13px;
+}
+
+.legend-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:11px;
+}
+
+.legend-left{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.legend-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+}
+
+/* CONTROLS */
+
+.controls{
+    display:flex;
+    gap:10px;
+    margin-bottom:15px;
+    flex-wrap:wrap;
+}
+
+.search{
+    flex:1;
+    min-width:220px;
+}
+
+.search input,
+.filter{
+    width:100%;
+    height:38px;
+    border:2px solid var(--border);
+    border-radius:8px;
+    background:white;
+    color:var(--text);
+    outline:none;
+    padding:0 11px;
+}
+
+.search input:focus,
+.filter:focus{
+    border-color:#67869c;
+}
+
+.filter{
+    width:160px;
+}
+
+.action-btn{
+    height:38px;
+    padding:0 14px;
+    border:2px solid #6f899d;
+    border-radius:8px;
+    background:#edf4f8;
+    color:#243b4e;
+    font-weight:700;
+    font-size:10px;
+}
+
+.action-btn:hover{
+    background:white;
+}
+
+/* USERS */
+
+.users-grid{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:10px;
+}
+
+.user-card{
+    background:white;
+    border:2px solid #adc0cf;
+    border-radius:9px;
+    padding:13px;
+    transition:.18s;
+    cursor:pointer;
+}
+
+.user-card:hover{
+    border-color:#5e7e95;
+    transform:translateY(-2px);
+    box-shadow:0 7px 16px rgba(45,74,95,.11);
+}
+
+.user-top{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+}
+
+.user-id{
+    font-weight:700;
+    font-size:11px;
+}
+
+.user-date{
+    color:var(--dim);
+    font-size:8px;
+    margin-top:4px;
+}
+
+.user-score{
+    margin-top:12px;
+    font-size:22px;
+    font-weight:700;
+}
+
+.progress{
+    height:5px;
+    background:#dbe5ec;
+    border-radius:5px;
+    overflow:hidden;
+    margin-top:7px;
+}
+
+.progress div{
+    height:100%;
+    background:var(--cyan);
+}
+
+.badge{
+    display:inline-block;
+    padding:3px 6px;
+    border-radius:7px;
+    font-size:8px;
+    font-weight:700;
+}
+
+.badge-critical{
+    color:#97202d;
+    background:#fae7e9;
+    border:1px solid #db979e;
+}
+
+.badge-high{
+    color:#984800;
+    background:#fff0df;
+    border:1px solid #ddb27e;
+}
+
+.badge-medium{
+    color:#805f00;
+    background:#fff8dc;
+    border:1px solid #d9c57b;
+}
+
+.badge-low{
+    color:#12653d;
+    background:#e7f6ed;
+    border:1px solid #8bc5a5;
+}
+
+/* ALERTS */
+
+.alert-list{
+    display:grid;
+    gap:10px;
+}
+
+.alert-row{
+    display:grid;
+    grid-template-columns:37px 1fr auto;
+    gap:11px;
+    padding:13px;
+    background:white;
+    border:2px solid #b4c5d1;
+    border-radius:9px;
+    cursor:pointer;
+    transition:.18s;
+}
+
+.alert-row:hover{
+    border-color:#64849a;
+}
+
+.alert-icon{
+    width:34px;
+    height:34px;
+    border-radius:8px;
+    display:grid;
+    place-items:center;
+    background:#fae9eb;
+    color:var(--red);
+    border:1px solid #dd9ba2;
+    font-weight:700;
+}
+
+.alert-title{
+    font-size:11px;
+    font-weight:700;
+}
+
+.alert-text{
+    margin-top:5px;
+    color:var(--muted);
+    font-size:10px;
+    line-height:1.55;
+}
+
+.alert-date{
+    color:var(--dim);
+    font-size:9px;
+    white-space:nowrap;
+}
+
+/* FULL ALERT TABLE */
+
+.table-wrap{
+    overflow:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+}
+
+th,
+td{
+    padding:11px 12px;
+    text-align:left;
+    border-bottom:1px solid #c4d2dc;
+    font-size:10px;
+}
+
+th{
+    background:#eaf1f5;
+    color:#42596b;
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+tr:hover td{
+    background:#f5f9fb;
+}
+
+/* SYSTEM STATUS */
+
+.status-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:14px;
+}
+
+.status-card{
+    background:white;
+    border:2px solid var(--border);
+    border-radius:10px;
+    padding:17px;
+}
+
+.status-card h4{
+    font-size:12px;
+    margin-bottom:12px;
+}
+
+.status-line{
+    display:flex;
+    justify-content:space-between;
+    padding:9px 0;
+    border-bottom:1px solid #d1dce4;
+    font-size:10px;
+}
+
+.status-line:last-child{
+    border-bottom:0;
+}
+
+.ok{
+    color:var(--green);
+    font-weight:700;
+}
+
+.info{
+    color:var(--muted);
+}
+
+/* MODALS */
+
+.modal{
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:rgba(26,43,56,.52);
+    z-index:100;
+    padding:20px;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-box{
+    width:min(920px,100%);
+    max-height:92vh;
+    overflow:auto;
+    background:#f7fafc;
+    border:2px solid #72899c;
+    border-radius:12px;
+    box-shadow:0 24px 70px rgba(30,50,66,.34);
+}
+
+.modal-head{
+    position:sticky;
+    top:0;
+    background:#edf3f7;
+    border-bottom:2px solid var(--border);
+    padding:15px 18px;
+    display:flex;
+    justify-content:space-between;
+}
+
+.modal-head h3{
+    font-size:14px;
+}
+
+.close{
+    border:0;
+    background:transparent;
+    color:#526a7d;
+    font-size:23px;
+}
+
+.profile{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    padding:17px;
+}
+
+.profile-card{
+    background:white;
+    border:1px solid #afc0cc;
+    border-radius:8px;
+    padding:11px;
+}
+
+.profile-label{
+    color:var(--muted);
+    font-size:8px;
+}
+
+.profile-value{
+    margin-top:6px;
+    font-size:11px;
+    font-weight:700;
+}
+
+.chart-area{
+    padding:0 17px 17px;
+}
+
+.chart{
+    height:250px;
+    border:2px solid #b6c7d2;
+    border-radius:9px;
+    background:white;
+    padding:8px;
+}
+
+.history{
+    display:grid;
+    gap:6px;
+    margin-top:10px;
+}
+
+.history-row{
+    display:grid;
+    grid-template-columns:90px 75px 75px 1fr;
+    gap:10px;
+    align-items:center;
+    background:white;
+    border:1px solid #c2d1db;
+    border-radius:7px;
+    padding:7px;
+    font-size:9px;
+}
+
+.history-bar{
+    height:5px;
+    background:#dbe5ec;
+    border-radius:4px;
+    overflow:hidden;
+}
+
+.history-bar div{
+    height:100%;
+    background:var(--cyan);
+}
+
+.detail{
+    padding:17px;
+}
+
+.detail-box{
+    background:white;
+    border:1px solid #b4c6d1;
+    border-radius:9px;
+    padding:14px;
+}
+
+.detail-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-bottom:14px;
+}
+
+.detail-meta{
+    color:var(--muted);
+    font-size:8px;
+}
+
+.detail-meta strong{
+    display:block;
+    color:var(--text);
+    font-size:10px;
+    margin-top:4px;
+}
+
+.explanation{
+    color:#41586a;
+    font-size:10px;
+    line-height:1.7;
+}
+
+.footer{
+    display:flex;
+    justify-content:space-between;
+    color:#62798a;
+    font-size:9px;
+    margin-top:14px;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:1200px){
+    .users-grid{
+        grid-template-columns:repeat(3,1fr);
+    }
+
+    .kpis{
+        grid-template-columns:repeat(2,1fr);
+    }
+}
+
+@media(max-width:950px){
+    .grid{
+        grid-template-columns:1fr;
+    }
+
+    .status-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:800px){
+    .sidebar{
+        width:68px;
+        padding:18px 8px;
+    }
+
+    .brand{
+        justify-content:center;
+        padding-left:0;
+        padding-right:0;
+    }
+
+    .brand-text,
+    .nav-title,
+    .nav-item span:last-child,
+    .sidebar-footer{
+        display:none;
+    }
+
+    .nav-item{
+        justify-content:center;
+    }
+
+    .main{
+        margin-left:68px;
+    }
+
+    .content{
+        padding:18px;
+    }
+
+    .topbar{
+        padding:0 18px;
+    }
+
+    .users-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .profile{
+        grid-template-columns:repeat(2,1fr);
+    }
+}
+
+@media(max-width:560px){
+    .kpis{
+        grid-template-columns:1fr;
+    }
+
+    .users-grid{
+        grid-template-columns:1fr;
+    }
+
+    .risk-layout{
+        grid-template-columns:1fr;
+        justify-items:center;
+    }
+
+    .profile{
+        grid-template-columns:1fr;
+    }
+
+    .detail-grid{
+        grid-template-columns:1fr 1fr;
+    }
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="app">
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+    <div class="brand">
+
+        <div class="brand-mark">
+            🛡
+        </div>
+
+        <div class="brand-text">
+            <div class="brand-title">
+                UEBA SENTINEL
+            </div>
+
+            <div class="brand-sub">
+                Security Analytics
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="nav-title">
+        Operations
+    </div>
+
+    <div class="nav">
+
+        <button
+            class="nav-item active"
+            data-page="overview"
+        >
+            <span class="nav-icon">◉</span>
+            <span>Security Overview</span>
+        </button>
+
+
+        <button
+            class="nav-item"
+            data-page="alerts"
+        >
+            <span class="nav-icon">⚠</span>
+            <span>Threat Alerts</span>
+        </button>
+
+
+        <button
+            class="nav-item"
+            data-page="behaviour"
+        >
+            <span class="nav-icon">◌</span>
+            <span>User Behaviour</span>
+        </button>
+
+
+        <button
+            class="nav-item"
+            data-page="activity"
+        >
+            <span class="nav-icon">▤</span>
+            <span>Activity Logs</span>
+        </button>
+
+    </div>
+
+
+    <div class="nav-title">
+        System
+    </div>
+
+    <div class="nav">
+
+        <button
+            class="nav-item"
+            data-page="system"
+        >
+            <span class="nav-icon">⚙</span>
+            <span>System Status</span>
+        </button>
+
+    </div>
+
+
+    <div class="sidebar-footer">
+
+        <div>
+            Model: Isolation Forest
+        </div>
+
+        <div>
+            Analytics: UEBA
+        </div>
+
+        <div>
+            Environment: Local Demo
+        </div>
+
+    </div>
+
+</aside>
+
+
+<!-- MAIN -->
+
+<main class="main">
+
+
+<header class="topbar">
+
+    <div class="top-title">
+
+        <h1 id="pageTitle">
+            Security Operations Center
+        </h1>
+
+        <p id="pageSubtitle">
+            Insider Threat Detection • User and Entity Behavior Analytics
+        </p>
+
+    </div>
+
+
+    <div
+        id="backendStatus"
+        class="backend"
+    >
+
+        <span class="status-dot"></span>
+
+        <span>
+            Connecting...
+        </span>
+
+    </div>
+
+</header>
+
+
+<section class="content">
+
+
+<!-- OVERVIEW -->
+
+<div
+    class="page active"
+    id="page-overview"
+>
+
+    <div class="page-heading">
+
+        <h2>
+            Security Overview
+        </h2>
+
+        <p>
+            Current security posture and highest-risk identities.
+        </p>
+
+    </div>
+
+
+    <div class="kpis">
+
+        <div class="kpi">
+            <div class="kpi-label">
+                MONITORED USERS
+            </div>
+
+            <div
+                class="kpi-value"
+                id="usersCount"
+            >
+                —
+            </div>
+
+            <div class="kpi-sub">
+                User identities analyzed
+            </div>
+        </div>
+
+
+        <div class="kpi">
+            <div class="kpi-label">
+                ACTIVITY EVENTS
+            </div>
+
+            <div
+                class="kpi-value"
+                id="activityCount"
+            >
+                —
+            </div>
+
+            <div class="kpi-sub">
+                Recorded behavioural events
+            </div>
+        </div>
+
+
+        <div class="kpi">
+            <div class="kpi-label">
+                PRIORITY ALERTS
+            </div>
+
+            <div
+                class="kpi-value"
+                id="alertsCount"
+            >
+                —
+            </div>
+
+            <div class="kpi-sub">
+                High and critical alerts
+            </div>
+        </div>
+
+
+        <div class="kpi">
+            <div class="kpi-label">
+                HIGH / CRITICAL
+            </div>
+
+            <div
+                class="kpi-value"
+                id="highRiskCount"
+            >
+                —
+            </div>
+
+            <div class="kpi-sub">
+                Requiring analyst review
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="grid">
+
+
+        <section class="panel">
+
+            <div class="panel-head">
+
+                <h3>
+                    Risk Distribution
+                </h3>
+
+                <span>
+                    Latest state
+                </span>
+
+            </div>
+
+
+            <div class="panel-body">
+
+                <div class="risk-layout">
+
+                    <div
+                        class="donut"
+                        id="riskDonut"
+                    >
+
+                        <div class="donut-inner">
+
+                            <div>
+
+                                <strong
+                                    id="riskUsers"
+                                >
+                                    0
+                                </strong>
+
+                                <small>
+                                    USERS
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="legend">
+
+                        <div class="legend-row">
+                            <div class="legend-left">
+                                <span
+                                    class="legend-dot"
+                                    style="background:#b52c3a"
+                                ></span>
+                                Critical
+                            </div>
+
+                            <strong id="criticalCount">
+                                0
+                            </strong>
+                        </div>
+
+
+                        <div class="legend-row">
+                            <div class="legend-left">
+                                <span
+                                    class="legend-dot"
+                                    style="background:#c45e00"
+                                ></span>
+                                High
+                            </div>
+
+                            <strong id="highCount">
+                                0
+                            </strong>
+                        </div>
+
+
+                        <div class="legend-row">
+                            <div class="legend-left">
+                                <span
+                                    class="legend-dot"
+                                    style="background:#a97a08"
+                                ></span>
+                                Medium
+                            </div>
+
+                            <strong id="mediumCount">
+                                0
+                            </strong>
+                        </div>
+
+
+                        <div class="legend-row">
+                            <div class="legend-left">
+                                <span
+                                    class="legend-dot"
+                                    style="background:#7690a4"
+                                ></span>
+                                Low
+                            </div>
+
+                            <strong id="lowCount">
+                                0
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="panel">
+
+            <div class="panel-head">
+
+                <h3>
+                    Highest Risk Users
+                </h3>
+
+                <span>
+                    Click to investigate
+                </span>
+
+            </div>
+
+
+            <div class="panel-body">
+
+                <div
+                    id="overviewUsers"
+                    class="users-grid"
+                    style="grid-template-columns:1fr"
+                >
+
+                    <div class="info">
+                        Loading...
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </div>
+
+
+    <section class="panel">
+
+        <div class="panel-head">
+
+            <h3>
+                Priority Security Alerts
+            </h3>
+
+            <span>
+                Latest
+            </span>
+
+        </div>
+
+
+        <div class="panel-body">
+
+            <div
+                id="overviewAlerts"
+                class="alert-list"
+            >
+
+                <div class="info">
+                    Loading...
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- ALERT PAGE -->
+
+<div
+    class="page"
+    id="page-alerts"
+>
+
+    <div class="page-heading">
+
+        <h2>
+            Threat Alerts
+        </h2>
+
+        <p>
+            Investigate behavioural anomalies detected by the UEBA system.
+        </p>
+
+    </div>
+
+
+    <div class="controls">
+
+        <div class="search">
+            <input
+                id="alertSearch"
+                type="text"
+                placeholder="Search alerts by user or explanation..."
+            >
+        </div>
+
+
+        <select
+            id="alertFilter"
+            class="filter"
+        >
+
+            <option value="all">
+                All severities
+            </option>
+
+            <option value="CRITICAL">
+                Critical
+            </option>
+
+            <option value="HIGH">
+                High
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <section class="panel">
+
+        <div class="panel-head">
+
+            <h3>
+                Alert Queue
+            </h3>
+
+            <span id="alertCountLabel">
+                —
+            </span>
+
+        </div>
+
+
+        <div class="panel-body">
+
+            <div
+                id="alertTable"
+                class="table-wrap"
+            >
+
+                <div class="info">
+                    Loading alerts...
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- BEHAVIOUR PAGE -->
+
+<div
+    class="page"
+    id="page-behaviour"
+>
+
+    <div class="page-heading">
+
+        <h2>
+            User Behaviour
+        </h2>
+
+        <p>
+            Search users, filter risk levels and open individual investigations.
+        </p>
+
+    </div>
+
+
+    <div class="controls">
+
+        <div class="search">
+
+            <input
+                id="userSearch"
+                type="text"
+                placeholder="Search by user ID..."
+            >
+
+        </div>
+
+
+        <select
+            id="userFilter"
+            class="filter"
+        >
+
+            <option value="all">
+                All risk levels
+            </option>
+
+            <option value="critical">
+                Critical
+            </option>
+
+            <option value="high">
+                High
+            </option>
+
+            <option value="medium">
+                Medium
+            </option>
+
+            <option value="low">
+                Low
+            </option>
+
+        </select>
+
+
+        <button
+            class="action-btn"
+            onclick="refreshDashboard()"
+        >
+            Refresh
+        </button>
+
+    </div>
+
+
+    <section class="panel">
+
+        <div class="panel-head">
+
+            <h3>
+                User Risk Monitoring
+            </h3>
+
+            <span>
+                Click any user
+            </span>
+
+        </div>
+
+
+        <div class="panel-body">
+
+            <div
+                id="behaviourUsers"
+                class="users-grid"
+            >
+
+                <div class="info">
+                    Loading...
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- ACTIVITY PAGE -->
+
+<div
+    class="page"
+    id="page-activity"
+>
+
+    <div class="page-heading">
+
+        <h2>
+            Activity Logs
+        </h2>
+
+        <p>
+            Raw behavioural events stored in the SQLite database.
+        </p>
+
+    </div>
+
+
+    <div class="controls">
+
+        <div class="search">
+
+            <input
+                id="activitySearch"
+                type="text"
+                placeholder="Search by user, event, device, location..."
+            >
+
+        </div>
+
+
+        <button
+            class="action-btn"
+            onclick="loadActivityLogs()"
+        >
+            Refresh Logs
+        </button>
+
+    </div>
+
+
+    <section class="panel">
+
+        <div class="panel-head">
+
+            <h3>
+                Recent Activity
+            </h3>
+
+            <span>
+                Latest 200 records
+            </span>
+
+        </div>
+
+
+        <div class="panel-body">
+
+            <div
+                id="activityTable"
+                class="table-wrap"
+            >
+
+                <div class="info">
+                    Loading activity logs...
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- SYSTEM PAGE -->
+
+<div
+    class="page"
+    id="page-system"
+>
+
+    <div class="page-heading">
+
+        <h2>
+            System Status
+        </h2>
+
+        <p>
+            Health and data status for the local UEBA demonstration environment.
+        </p>
+
+    </div>
+
+
+    <div class="status-grid">
+
+        <div class="status-card">
+
+            <h4>
+                Backend API
+            </h4>
+
+            <div class="status-line">
+                <span>
+                    FastAPI
+                </span>
+
+                <strong
+                    id="apiHealth"
+                    class="ok"
+                >
+                    Connected
+                </strong>
+            </div>
+
+
+            <div class="status-line">
+                <span>
+                    Endpoint
+                </span>
+
+                <span class="info">
+                    127.0.0.1:8000
+                </span>
+            </div>
+
+        </div>
+
+
+        <div class="status-card">
+
+            <h4>
+                Database
+            </h4>
+
+            <div class="status-line">
+                <span>
+                    SQLite
+                </span>
+
+                <strong
+                    id="dbHealth"
+                    class="ok"
+                >
+                    Available
+                </strong>
+            </div>
+
+
+            <div class="status-line">
+                <span>
+                    Database
+                </span>
+
+                <span class="info">
+                    data/ueba.db
+                </span>
+            </div>
+
+        </div>
+
+
+        <div class="status-card">
+
+            <h4>
+                ML Pipeline
+            </h4>
+
+            <div class="status-line">
+                <span>
+                    Model
+                </span>
+
+                <strong class="ok">
+                    Isolation Forest
+                </strong>
+            </div>
+
+
+            <div class="status-line">
+                <span>
+                    User models
+                </span>
+
+                <strong
+                    id="modelUsers"
+                    class="ok"
+                >
+                    —
+                </strong>
+            </div>
+
+        </div>
+
+
+        <div class="status-card">
+
+            <h4>
+                Data Pipeline
+            </h4>
+
+            <div class="status-line">
+                <span>
+                    Users
+                </span>
+
+                <strong
+                    id="systemUsers"
+                    class="info"
+                >
+                    —
+                </strong>
+            </div>
+
+
+            <div class="status-line">
+                <span>
+                    Activity logs
+                </span>
+
+                <strong
+                    id="systemActivity"
+                    class="info"
+                >
+                    —
+                </strong>
+            </div>
+
+
+            <div class="status-line">
+                <span>
+                    Daily features
+                </span>
+
+                <strong
+                    id="systemFeatures"
+                    class="info"
+                >
+                    —
+                </strong>
+            </div>
+
+
+            <div class="status-line">
+                <span>
+                    Alerts
+                </span>
+
+                <strong
+                    id="systemAlerts"
+                    class="info"
+                >
+                    —
+                </strong>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="footer">
+
+    <span id="lastUpdated">
+        Last updated: —
+    </span>
+
+    <span>
+        Auto-refresh: 10 seconds • Local demonstration environment
+    </span>
+
+</div>
+
+</section>
+
+</main>
+
+</div>
+
+
+<!-- USER MODAL -->
+
+<div
+    class="modal"
+    id="userModal"
+>
+
+<div class="modal-box">
+
+    <div class="modal-head">
+
+        <h3 id="userModalTitle">
+            User Investigation
+        </h3>
+
+        <button
+            class="close"
+            onclick="closeUserModal()"
+        >
+            ×
+        </button>
+
+    </div>
+
+
+    <div class="profile">
+
+        <div class="profile-card">
+            <div class="profile-label">
+                USER ID
+            </div>
+
+            <div
+                class="profile-value"
+                id="profileId"
+            >
+                —
+            </div>
+        </div>
+
+
+        <div class="profile-card">
+            <div class="profile-label">
+                NAME
+            </div>
+
+            <div
+                class="profile-value"
+                id="profileName"
+            >
+                —
+            </div>
+        </div>
+
+
+        <div class="profile-card">
+            <div class="profile-label">
+                ROLE
+            </div>
+
+            <div
+                class="profile-value"
+                id="profileRole"
+            >
+                —
+            </div>
+        </div>
+
+
+        <div class="profile-card">
+            <div class="profile-label">
+                DEPARTMENT
+            </div>
+
+            <div
+                class="profile-value"
+                id="profileDepartment"
+            >
+                —
+            </div>
+        </div>
+
+
+        <div class="profile-card">
+            <div class="profile-label">
+                LATEST RISK
+            </div>
+
+            <div
+                class="profile-value"
+                id="profileRisk"
+            >
+                —
+            </div>
+        </div>
+
+
+        <div class="profile-card">
+            <div class="profile-label">
+                RISK LEVEL
+            </div>
+
+            <div
+                class="profile-value"
+                id="profileLevel"
+            >
+                —
+            </div>
+        </div>
+
+
+        <div class="profile-card">
+            <div class="profile-label">
+                RISK DELTA
+            </div>
+
+            <div
+                class="profile-value"
+                id="profileDelta"
+            >
+                —
+            </div>
+        </div>
+
+
+        <div class="profile-card">
+            <div class="profile-label">
+                RECORDS
+            </div>
+
+            <div
+                class="profile-value"
+                id="profileRecords"
+            >
+                —
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="chart-area">
+
+        <div class="chart">
+
+            <div
+                id="riskChart"
+                style="width:100%;height:100%;"
+            >
+            </div>
+
+        </div>
+
+
+        <div
+            id="history"
+            class="history"
+        >
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+
+<!-- ALERT MODAL -->
+
+<div
+    class="modal"
+    id="alertModal"
+>
+
+<div class="modal-box">
+
+    <div class="modal-head">
+
+        <h3>
+            Alert Investigation
+        </h3>
+
+        <button
+            class="close"
+            onclick="closeAlertModal()"
+        >
+            ×
+        </button>
+
+    </div>
+
+
+    <div class="detail">
+
+        <div class="detail-box">
+
+            <div class="detail-grid">
+
+                <div>
+                    <div class="detail-meta">
+                        USER
+                    </div>
+
+                    <strong id="alertUser">
+                        —
+                    </strong>
+                </div>
+
+
+                <div>
+                    <div class="detail-meta">
+                        RISK
+                    </div>
+
+                    <strong id="alertRisk">
+                        —
+                    </strong>
+                </div>
+
+
+                <div>
+                    <div class="detail-meta">
+                        LEVEL
+                    </div>
+
+                    <strong id="alertLevel">
+                        —
+                    </strong>
+                </div>
+
+
+                <div>
+                    <div class="detail-meta">
+                        DATE
+                    </div>
+
+                    <strong id="alertDate">
+                        —
+                    </strong>
+                </div>
+
+            </div>
+
+
+            <div
+                id="alertExplanation"
+                class="explanation"
+            >
+                —
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+
+<script>
+
+const API_BASE =
+    "http://127.0.0.1:8000";
+
+
+let riskRows = [];
+let allAlerts = [];
+let latestUsers = [];
+let activityLogs = [];
+
+
+const pageTitles = {
+
+    overview: [
+        "Security Operations Center",
+        "Insider Threat Detection • User and Entity Behavior Analytics"
+    ],
+
+    alerts: [
+        "Threat Alerts",
+        "Investigate detected behavioural anomalies"
+    ],
+
+    behaviour: [
+        "User Behaviour",
+        "Behavioural risk monitoring and investigation"
+    ],
+
+    activity: [
+        "Activity Logs",
+        "Raw events from the UEBA data pipeline"
+    ],
+
+    system: [
+        "System Status",
+        "Backend, database and ML pipeline health"
+    ]
+
+};
+
+
+function escapeHtml(value){
+
+    return String(value ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+}
+
+
+function number(value){
+
+    const n = Number(value);
+
+    if(!Number.isFinite(n)){
+        return "0";
+    }
+
+    return Math.round(
+        n
+    ).toLocaleString();
+}
+
+
+function score(value){
+
+    const n = Number(value);
+
+    return Number.isFinite(n)
+        ? n.toFixed(1)
+        : "0.0";
+}
+
+
+function normalizeLevel(value){
+
+    return String(
+        value || "Low"
+    )
+    .trim()
+    .toLowerCase();
+}
+
+
+function badgeClass(level){
+
+    const normalized =
+        normalizeLevel(level);
+
+    if(normalized === "critical"){
+        return "badge-critical";
+    }
+
+    if(normalized === "high"){
+        return "badge-high";
+    }
+
+    if(normalized === "medium"){
+        return "badge-medium";
+    }
+
+    return "badge-low";
+}
+
+
+function latestPerUser(rows){
+
+    const map = new Map();
+
+    for(const row of rows){
+
+        const existing =
+            map.get(row.user_id);
+
+        if(!existing){
+
+            map.set(
+                row.user_id,
+                row
+            );
+
+            continue;
+        }
+
+        if(
+            new Date(row.timestamp)
+            >=
+            new Date(existing.timestamp)
+        ){
+
+            map.set(
+                row.user_id,
+                row
+            );
+        }
+    }
+
+    return Array.from(
+        map.values()
+    );
+}
+
+
+/* NAVIGATION */
+
+function showPage(page){
+
+    document.querySelectorAll(
+        ".page"
+    ).forEach(
+        element => {
+            element.classList.remove(
+                "active"
+            );
+        }
+    );
+
+
+    const target =
+        document.getElementById(
+            `page-${page}`
+        );
+
+    if(target){
+
+        target.classList.add(
+            "active"
+        );
+    }
+
+
+    document.querySelectorAll(
+        ".nav-item"
+    ).forEach(
+        button => {
+
+            button.classList.toggle(
+                "active",
+                button.dataset.page === page
+            );
+        }
+    );
+
+
+    const title =
+        pageTitles[page];
+
+    if(title){
+
+        document.getElementById(
+            "pageTitle"
+        ).textContent =
+            title[0];
+
+        document.getElementById(
+            "pageSubtitle"
+        ).textContent =
+            title[1];
+    }
+
+
+    if(page === "alerts"){
+
+        renderAlertTable();
+    }
+
+
+    if(page === "behaviour"){
+
+        renderBehaviourUsers();
+    }
+
+
+    if(page === "activity"){
+
+        loadActivityLogs();
+    }
+}
+
+
+document.querySelectorAll(
+    ".nav-item"
+).forEach(
+    button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                showPage(
+                    button.dataset.page
+                );
+            }
+        );
+    }
+);
+
+
+/* BACKEND */
+
+function setBackendStatus(connected){
+
+    const element =
+        document.getElementById(
+            "backendStatus"
+        );
+
+    if(connected){
+
+        element.classList.remove(
+            "offline"
+        );
+
+        element.innerHTML = `
+            <span class="status-dot"></span>
+            <span>Backend Connected</span>
+        `;
+
+        document.getElementById(
+            "apiHealth"
+        ).textContent =
+            "Connected";
+
+    }else{
+
+        element.classList.add(
+            "offline"
+        );
+
+        element.innerHTML = `
+            <span class="status-dot"></span>
+            <span>Backend Offline</span>
+        `;
+
+        document.getElementById(
+            "apiHealth"
+        ).textContent =
+            "Offline";
+    }
+}
+
+
+async function loadStats(){
+
+    const response =
+        await fetch(
+            `${API_BASE}/stats`
+        );
+
+    if(!response.ok){
+
+        throw new Error(
+            "Stats request failed"
+        );
+    }
+
+    const data =
+        await response.json();
+
+
+    document.getElementById(
+        "usersCount"
+    ).textContent =
+        number(data.users);
+
+
+    document.getElementById(
+        "activityCount"
+    ).textContent =
+        number(data.activity_logs);
+
+
+    document.getElementById(
+        "alertsCount"
+    ).textContent =
+        number(data.total_alerts);
+
+
+    document.getElementById(
+        "highRiskCount"
+    ).textContent =
+        number(data.high_risk_alerts);
+
+
+    document.getElementById(
+        "systemUsers"
+    ).textContent =
+        number(data.users);
+
+
+    document.getElementById(
+        "systemActivity"
+    ).textContent =
+        number(data.activity_logs);
+
+
+    document.getElementById(
+        "systemFeatures"
+    ).textContent =
+        number(data.daily_features);
+
+
+    document.getElementById(
+        "systemAlerts"
+    ).textContent =
+        number(data.total_alerts);
+
+
+    document.getElementById(
+        "modelUsers"
+    ).textContent =
+        number(data.users);
+}
+
+
+async function loadRiskScores(){
+
+    const response =
+        await fetch(
+            `${API_BASE}/risk-scores`
+        );
+
+    if(!response.ok){
+
+        throw new Error(
+            "Risk scores request failed"
+        );
+    }
+
+    const data =
+        await response.json();
+
+    riskRows =
+        Array.isArray(
+            data.risk_scores
+        )
+        ? data.risk_scores
+        : [];
+
+    latestUsers =
+        latestPerUser(
+            riskRows
+        );
+
+    renderRiskDistribution();
+    renderOverviewUsers();
+    renderBehaviourUsers();
+}
+
+
+function renderRiskDistribution(){
+
+    let critical = 0;
+    let high = 0;
+    let medium = 0;
+    let low = 0;
+
+
+    latestUsers.forEach(
+        row => {
+
+            const level =
+                normalizeLevel(
+                    row.risk_level
+                );
+
+            if(level === "critical"){
+                critical++;
+            }else if(level === "high"){
+                high++;
+            }else if(level === "medium"){
+                medium++;
+            }else{
+                low++;
+            }
+        }
+    );
+
+
+    const total =
+        latestUsers.length || 1;
+
+
+    document.getElementById(
+        "riskUsers"
+    ).textContent =
+        latestUsers.length;
+
+
+    document.getElementById(
+        "criticalCount"
+    ).textContent =
+        critical;
+
+
+    document.getElementById(
+        "highCount"
+    ).textContent =
+        high;
+
+
+    document.getElementById(
+        "mediumCount"
+    ).textContent =
+        medium;
+
+
+    document.getElementById(
+        "lowCount"
+    ).textContent =
+        low;
+
+
+    const criticalEnd =
+        critical / total * 100;
+
+
+    const highEnd =
+        criticalEnd +
+        high / total * 100;
+
+
+    const mediumEnd =
+        highEnd +
+        medium / total * 100;
+
+
+    document.getElementById(
+        "riskDonut"
+    ).style.background = `
+        conic-gradient(
+            #b52c3a 0% ${criticalEnd}%,
+            #c45e00 ${criticalEnd}% ${highEnd}%,
+            #a97a08 ${highEnd}% ${mediumEnd}%,
+            #7690a4 ${mediumEnd}% 100%
+        )
+    `;
+}
+
+
+function makeUserCard(user){
+
+    const risk =
+        Number(
+            user.cumulative_risk || 0
+        );
+
+    const level =
+        user.risk_level || "Low";
+
+
+    const card =
+        document.createElement(
+            "div"
+        );
+
+    card.className =
+        "user-card";
+
+    card.onclick =
+        () => openUser(
+            user.user_id
+        );
+
+
+    card.innerHTML = `
+
+        <div class="user-top">
+
+            <div>
+
+                <div class="user-id">
+                    ${escapeHtml(
+                        user.user_id
+                    )}
+                </div>
+
+                <div class="user-date">
+                    ${escapeHtml(
+                        user.timestamp || ""
+                    )}
+                </div>
+
+            </div>
+
+            <span class="badge ${badgeClass(level)}">
+                ${escapeHtml(
+                    level.toUpperCase()
+                )}
+            </span>
+
+        </div>
+
+
+        <div class="user-score">
+            ${score(risk)}
+        </div>
+
+
+        <div class="progress">
+            <div
+                style="width:${Math.min(
+                    risk,
+                    100
+                )}%"
+            ></div>
+        </div>
+
+    `;
+
+    return card;
+}
+
+
+function renderOverviewUsers(){
+
+    const container =
+        document.getElementById(
+            "overviewUsers"
+        );
+
+    const users =
+        latestUsers
+            .slice()
+            .sort(
+                (a,b) =>
+                    Number(
+                        b.cumulative_risk || 0
+                    )
+                    -
+                    Number(
+                        a.cumulative_risk || 0
+                    )
+            )
+            .slice(0,5);
+
+
+    container.innerHTML = "";
+
+
+    users.forEach(
+        user => {
+
+            const card =
+                makeUserCard(
+                    user
+                );
+
+            container.appendChild(
+                card
+            );
+        }
+    );
+}
+
+
+function renderBehaviourUsers(){
+
+    const container =
+        document.getElementById(
+            "behaviourUsers"
+        );
+
+
+    const search =
+        document.getElementById(
+            "userSearch"
+        ).value
+        .trim()
+        .toLowerCase();
+
+
+    const filter =
+        document.getElementById(
+            "userFilter"
+        ).value;
+
+
+    let users =
+        latestUsers
+            .slice()
+            .sort(
+                (a,b) =>
+                    Number(
+                        b.cumulative_risk || 0
+                    )
+                    -
+                    Number(
+                        a.cumulative_risk || 0
+                    )
+            );
+
+
+    users =
+        users.filter(
+            user => {
+
+                const id =
+                    String(
+                        user.user_id || ""
+                    )
+                    .toLowerCase();
+
+
+                const level =
+                    normalizeLevel(
+                        user.risk_level
+                    );
+
+
+                return (
+                    (!search ||
+                        id.includes(search))
+                    &&
+                    (
+                        filter === "all"
+                        ||
+                        level === filter
+                    )
+                );
+            }
+        );
+
+
+    container.innerHTML = "";
+
+
+    if(users.length === 0){
+
+        container.innerHTML =
+            `
+            <div class="info">
+                No users match the current filters.
+            </div>
+            `;
+
+        return;
+    }
+
+
+    users.forEach(
+        user => {
+
+            container.appendChild(
+                makeUserCard(user)
+            );
+        }
+    );
+}
+
+
+function renderOverviewAlerts(){
+
+    const container =
+        document.getElementById(
+            "overviewAlerts"
+        );
+
+
+    const alerts =
+        allAlerts
+            .slice()
+            .sort(
+                (a,b) =>
+                    Number(
+                        b.risk_score || 0
+                    )
+                    -
+                    Number(
+                        a.risk_score || 0
+                    )
+            )
+            .slice(0,5);
+
+
+    container.innerHTML = "";
+
+
+    if(alerts.length === 0){
+
+        container.innerHTML =
+            `<div class="info">
+                No priority alerts.
+             </div>`;
+
+        return;
+    }
+
+
+    alerts.forEach(
+        alert => {
+
+            container.appendChild(
+                makeAlertRow(alert)
+            );
+
+        }
+    );
+}
+
+
+function makeAlertRow(alert){
+
+    const row =
+        document.createElement(
+            "div"
+        );
+
+    row.className =
+        "alert-row";
+
+    row.onclick =
+        () => openAlert(alert);
+
+
+    row.innerHTML = `
+
+        <div class="alert-icon">
+            !
+        </div>
+
+
+        <div>
+
+            <div class="alert-title">
+                ${escapeHtml(
+                    alert.user_id
+                )}
+
+                •
+
+                ${escapeHtml(
+                    alert.risk_level
+                )}
+
+                •
+
+                Risk
+                ${score(
+                    alert.risk_score
+                )}
+            </div>
+
+
+            <div class="alert-text">
+                ${escapeHtml(
+                    alert.explanation ||
+                    "Behavioural anomaly detected."
+                )}
+            </div>
+
+        </div>
+
+
+        <div class="alert-date">
+            ${escapeHtml(
+                alert.timestamp || ""
+            )}
+        </div>
+
+    `;
+
+
+    return row;
+}
+
+
+async function loadAlerts(){
+
+    const response =
+        await fetch(
+            `${API_BASE}/alerts`
+        );
+
+    if(!response.ok){
+
+        throw new Error(
+            "Alerts request failed"
+        );
+    }
+
+    const data =
+        await response.json();
+
+    allAlerts =
+        Array.isArray(
+            data.alerts
+        )
+        ? data.alerts
+        : [];
+
+
+    renderOverviewAlerts();
+    renderAlertTable();
+}
+
+
+function renderAlertTable(){
+
+    const container =
+        document.getElementById(
+            "alertTable"
+        );
+
+
+    if(!container){
+        return;
+    }
+
+
+    const search =
+        document.getElementById(
+            "alertSearch"
+        ).value
+        .trim()
+        .toLowerCase();
+
+
+    const filter =
+        document.getElementById(
+            "alertFilter"
+        ).value;
+
+
+    let alerts =
+        allAlerts.slice();
+
+
+    alerts =
+        alerts.filter(
+            alert => {
+
+                const level =
+                    String(
+                        alert.risk_level || ""
+                    )
+                    .toUpperCase();
+
+
+                const text =
+                    (
+                        String(
+                            alert.user_id || ""
+                        )
+                        +
+                        " " +
+                        String(
+                            alert.explanation || ""
+                        )
+                    )
+                    .toLowerCase();
+
+
+                return (
+                    (!search ||
+                        text.includes(search))
+                    &&
+                    (
+                        filter === "all"
+                        ||
+                        level === filter
+                    )
+                );
+            }
+        );
+
+
+    document.getElementById(
+        "alertCountLabel"
+    ).textContent =
+        `${alerts.length} alerts`;
+
+
+    if(alerts.length === 0){
+
+        container.innerHTML =
+            `<div class="info">
+                No alerts match the current filters.
+             </div>`;
+
+        return;
+    }
+
+
+    let html = `
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>User</th>
+                    <th>Risk</th>
+                    <th>Level</th>
+                    <th>Date</th>
+                    <th>Explanation</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+    `;
+
+
+    alerts.forEach(
+        alert => {
+
+            html += `
+                <tr
+                    style="cursor:pointer"
+                    onclick="openAlertById(${Number(
+                        alert.id
+                    )})"
+                >
+
+                    <td>
+                        ${escapeHtml(
+                            alert.user_id
+                        )}
+                    </td>
+
+                    <td>
+                        ${score(
+                            alert.risk_score
+                        )}
+                    </td>
+
+                    <td>
+                        <span class="badge ${badgeClass(
+                            alert.risk_level
+                        )}">
+                            ${escapeHtml(
+                                String(
+                                    alert.risk_level ||
+                                    ""
+                                )
+                                .toUpperCase()
+                            )}
+                        </span>
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            alert.timestamp || ""
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            alert.explanation || ""
+                        )}
+                    </td>
+
+                </tr>
+            `;
+
+        }
+    );
+
+
+    html += `
+            </tbody>
+        </table>
+    `;
+
+
+    container.innerHTML =
+        html;
+}
+
+
+function openAlertById(id){
+
+    const alert =
+        allAlerts.find(
+            item =>
+                Number(item.id) ===
+                Number(id)
+        );
+
+    if(alert){
+
+        openAlert(alert);
+    }
+}
+
+
+async function loadActivityLogs(){
+
+    const container =
+        document.getElementById(
+            "activityTable"
+        );
+
+
+    if(!container){
+        return;
+    }
+
+
+    try{
+
+        const response =
+            await fetch(
+                `${API_BASE}/activity-logs`
+            );
+
+
+        if(!response.ok){
+
+            throw new Error(
+                "Activity logs request failed"
+            );
+        }
+
+
+        const data =
+            await response.json();
+
+
+        activityLogs =
+            Array.isArray(
+                data.activity_logs
+            )
+            ? data.activity_logs
+            : [];
+
+
+        renderActivityTable();
+
+
+    }catch(error){
+
+        console.error(error);
+
+        container.innerHTML =
+            `<div class="info">
+                Could not load activity logs.
+             </div>`;
+    }
+}
+
+
+function renderActivityTable(){
+
+    const container =
+        document.getElementById(
+            "activityTable"
+        );
+
+
+    const search =
+        document.getElementById(
+            "activitySearch"
+        ).value
+        .trim()
+        .toLowerCase();
+
+
+    let rows =
+        activityLogs.slice();
+
+
+    if(search){
+
+        rows =
+            rows.filter(
+                row => {
+
+                    const text =
+                        [
+                            row.user_id,
+                            row.event_type,
+                            row.device_id,
+                            row.location,
+                            row.resource,
+                            row.sensitivity
+                        ]
+                        .join(" ")
+                        .toLowerCase();
+
+
+                    return text.includes(
+                        search
+                    );
+                }
+            );
+    }
+
+
+    if(rows.length === 0){
+
+        container.innerHTML =
+            `<div class="info">
+                No activity records match the search.
+             </div>`;
+
+        return;
+    }
+
+
+    let html = `
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>Time</th>
+                    <th>User</th>
+                    <th>Event</th>
+                    <th>Device</th>
+                    <th>Location</th>
+                    <th>Files</th>
+                    <th>Sensitive</th>
+                    <th>Data MB</th>
+                    <th>Failed</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+    `;
+
+
+    rows.forEach(
+        row => {
+
+            html += `
+                <tr>
+
+                    <td>
+                        ${escapeHtml(
+                            row.timestamp
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            row.user_id
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            row.event_type
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            row.device_id
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            row.location
+                        )}
+                    </td>
+
+                    <td>
+                        ${number(
+                            row.files_accessed
+                        )}
+                    </td>
+
+                    <td>
+                        ${number(
+                            row.sensitive_files_accessed
+                        )}
+                    </td>
+
+                    <td>
+                        ${score(
+                            row.data_volume_mb
+                        )}
+                    </td>
+
+                    <td>
+                        ${number(
+                            row.failed_logins
+                        )}
+                    </td>
+
+                </tr>
+            `;
+        }
+    );
+
+
+    html += `
+            </tbody>
+        </table>
+    `;
+
+
+    container.innerHTML =
+        html;
+}
+
+
+/* USER INVESTIGATION */
+
+async function openUser(userId){
+
+    document.getElementById(
+        "userModal"
+    )
+    .classList.add(
+        "show"
+    );
+
+
+    document.getElementById(
+        "userModalTitle"
+    ).textContent =
+        `User Investigation — ${userId}`;
+
+
+    try{
+
+        const response =
+            await fetch(
+                `${API_BASE}/user/${encodeURIComponent(
+                    userId
+                )}`
+            );
+
+
+        if(!response.ok){
+
+            throw new Error(
+                "User history request failed"
+            );
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const user =
+            data.user || {};
+
+
+        const history =
+            Array.isArray(
+                data.risk_history
+            )
+            ? data.risk_history
+            : [];
+
+
+        document.getElementById(
+            "profileId"
+        ).textContent =
+            user.user_id || "—";
+
+
+        document.getElementById(
+            "profileName"
+        ).textContent =
+            user.name || "—";
+
+
+        document.getElementById(
+            "profileRole"
+        ).textContent =
+            user.role || "—";
+
+
+        document.getElementById(
+            "profileDepartment"
+        ).textContent =
+            user.department || "—";
+
+
+        document.getElementById(
+            "profileRecords"
+        ).textContent =
+            history.length;
+
+
+        if(history.length){
+
+            const latest =
+                history[
+                    history.length - 1
+                ];
+
+
+            document.getElementById(
+                "profileRisk"
+            ).textContent =
+                score(
+                    latest.cumulative_risk
+                );
+
+
+            document.getElementById(
+                "profileLevel"
+            ).textContent =
+                latest.risk_level ||
+                "—";
+
+
+            document.getElementById(
+                "profileDelta"
+            ).textContent =
+                score(
+                    latest.risk_delta
+                );
+
+        }else{
+
+            document.getElementById(
+                "profileRisk"
+            ).textContent =
+                "—";
+
+            document.getElementById(
+                "profileLevel"
+            ).textContent =
+                "—";
+
+            document.getElementById(
+                "profileDelta"
+            ).textContent =
+                "—";
+        }
+
+
+        renderChart(history);
+        renderHistory(history);
+
+
+    }catch(error){
+
+        console.error(error);
+
+        document.getElementById(
+            "riskChart"
+        ).innerHTML =
+            `<div class="info">
+                Could not load user history.
+             </div>`;
+    }
+}
+
+
+function renderChart(history){
+
+    const container =
+        document.getElementById(
+            "riskChart"
+        );
+
+
+    if(!history.length){
+
+        container.innerHTML =
+            `<div class="info">
+                No history available.
+             </div>`;
+
+        return;
+    }
+
+
+    const visible =
+        history
+            .slice()
+            .reverse()
+            .slice(0,20)
+            .reverse();
+
+
+    const width = 900;
+    const height = 225;
+    const left = 42;
+    const right = 15;
+    const top = 15;
+    const bottom = 28;
+
+
+    const innerWidth =
+        width -
+        left -
+        right;
+
+
+    const innerHeight =
+        height -
+        top -
+        bottom;
+
+
+    let riskPoints = [];
+    let anomalyPoints = [];
+
+
+    visible.forEach(
+        (row,index) => {
+
+            const x =
+                left +
+                (
+                    visible.length === 1
+                    ? innerWidth / 2
+                    : index /
+                      (visible.length - 1) *
+                      innerWidth
+                );
+
+
+            const risk =
+                Math.max(
+                    0,
+                    Math.min(
+                        100,
+                        Number(
+                            row.cumulative_risk
+                        ) || 0
+                    )
+                );
+
+
+            const anomaly =
+                Math.max(
+                    0,
+                    Math.min(
+                        100,
+                        Number(
+                            row.anomaly_score
+                        ) || 0
+                    )
+                );
+
+
+            const yRisk =
+                top +
+                innerHeight -
+                (
+                    risk / 100 *
+                    innerHeight
+                );
+
+
+            const yAnomaly =
+                top +
+                innerHeight -
+                (
+                    anomaly / 100 *
+                    innerHeight
+                );
+
+
+            riskPoints.push(
+                `${x},${yRisk}`
+            );
+
+
+            anomalyPoints.push(
+                `${x},${yAnomaly}`
+            );
+        }
+    );
+
+
+    let grid = "";
+
+
+    [0,25,50,75,100]
+        .forEach(
+            value => {
+
+                const y =
+                    top +
+                    innerHeight -
+                    (
+                        value / 100 *
+                        innerHeight
+                    );
+
+
+                grid += `
+                    <line
+                        x1="${left}"
+                        y1="${y}"
+                        x2="${width-right}"
+                        y2="${y}"
+                        stroke="#d4e0e7"
+                        stroke-width="1"
+                    />
+
+                    <text
+                        x="5"
+                        y="${y+3}"
+                        font-size="9"
+                        fill="#7890a1"
+                    >
+                        ${value}
+                    </text>
+                `;
+            }
+        );
+
+
+    container.innerHTML = `
+        <svg
+            viewBox="0 0 ${width} ${height}"
+            preserveAspectRatio="none"
+            style="width:100%;height:100%"
+        >
+
+            ${grid}
+
+            <polyline
+                points="${riskPoints.join(" ")}"
+                fill="none"
+                stroke="#147da6"
+                stroke-width="3"
+            />
+
+            <polyline
+                points="${anomalyPoints.join(" ")}"
+                fill="none"
+                stroke="#c45e00"
+                stroke-width="2"
+                stroke-dasharray="6 5"
+            />
+
+            <text
+                x="${width-190}"
+                y="16"
+                font-size="9"
+                fill="#147da6"
+            >
+                — Cumulative Risk
+            </text>
+
+            <text
+                x="${width-190}"
+                y="31"
+                font-size="9"
+                fill="#c45e00"
+            >
+                - - Anomaly Score
+            </text>
+
+        </svg>
+    `;
+}
+
+
+function renderHistory(history){
+
+    const container =
+        document.getElementById(
+            "history"
+        );
+
+
+    container.innerHTML = "";
+
+
+    history
+        .slice()
+        .reverse()
+        .slice(0,15)
+        .forEach(
+            row => {
+
+                const risk =
+                    Number(
+                        row.cumulative_risk
+                    ) || 0;
+
+
+                const anomaly =
+                    Number(
+                        row.anomaly_score
+                    ) || 0;
+
+
+                const item =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                item.className =
+                    "history-row";
+
+
+                item.innerHTML = `
+
+                    <strong>
+                        ${escapeHtml(
+                            row.timestamp
+                        )}
+                    </strong>
+
+                    <span>
+                        Anomaly
+                        ${anomaly.toFixed(1)}
+                    </span>
+
+                    <span>
+                        Risk
+                        ${risk.toFixed(1)}
+                    </span>
+
+                    <div class="history-bar">
+                        <div
+                            style="width:${Math.min(
+                                risk,
+                                100
+                            )}%"
+                        ></div>
+                    </div>
+
+                `;
+
+
+                container.appendChild(
+                    item
+                );
+            }
+        );
+}
+
+
+function closeUserModal(){
+
+    document.getElementById(
+        "userModal"
+    )
+    .classList.remove(
+        "show"
+    );
+}
+
+
+/* ALERT INVESTIGATION */
+
+function openAlert(alert){
+
+    document.getElementById(
+        "alertModal"
+    )
+    .classList.add(
+        "show"
+    );
+
+
+    document.getElementById(
+        "alertUser"
+    ).textContent =
+        alert.user_id || "—";
+
+
+    document.getElementById(
+        "alertRisk"
+    ).textContent =
+        score(
+            alert.risk_score
+        );
+
+
+    document.getElementById(
+        "alertLevel"
+    ).textContent =
+        alert.risk_level || "—";
+
+
+    document.getElementById(
+        "alertDate"
+    ).textContent =
+        alert.timestamp || "—";
+
+
+    document.getElementById(
+        "alertExplanation"
+    ).textContent =
+        alert.explanation ||
+        "Behavioural anomaly detected.";
+}
+
+
+function closeAlertModal(){
+
+    document.getElementById(
+        "alertModal"
+    )
+    .classList.remove(
+        "show"
+    );
+}
+
+
+/* SEARCH EVENTS */
+
+document.getElementById(
+    "userSearch"
+).addEventListener(
+    "input",
+    renderBehaviourUsers
+);
+
+
+document.getElementById(
+    "userFilter"
+).addEventListener(
+    "change",
+    renderBehaviourUsers
+);
+
+
+document.getElementById(
+    "alertSearch"
+).addEventListener(
+    "input",
+    renderAlertTable
+);
+
+
+document.getElementById(
+    "alertFilter"
+).addEventListener(
+    "change",
+    renderAlertTable
+);
+
+
+document.getElementById(
+    "activitySearch"
+).addEventListener(
+    "input",
+    renderActivityTable
+);
+
+
+/* MODAL CLOSE */
+
+document.getElementById(
+    "userModal"
+).addEventListener(
+    "click",
+    event => {
+
+        if(
+            event.target ===
+            event.currentTarget
+        ){
+
+            closeUserModal();
+        }
+    }
+);
+
+
+document.getElementById(
+    "alertModal"
+).addEventListener(
+    "click",
+    event => {
+
+        if(
+            event.target ===
+            event.currentTarget
+        ){
+
+            closeAlertModal();
+        }
+    }
+);
+
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if(event.key === "Escape"){
+
+            closeUserModal();
+            closeAlertModal();
+        }
+    }
+);
+
+
+/* MAIN REFRESH */
+
+async function refreshDashboard(){
+
+    try{
+
+        await Promise.all([
+            loadStats(),
+            loadRiskScores(),
+            loadAlerts()
+        ]);
+
+
+        setBackendStatus(
+            true
+        );
+
+
+        document.getElementById(
+            "lastUpdated"
+        ).textContent =
+            "Last updated: " +
+            new Date().toLocaleTimeString();
+
+
+    }catch(error){
+
+        console.error(error);
+
+
+        setBackendStatus(
+            false
+        );
+
+
+        document.getElementById(
+            "lastUpdated"
+        ).textContent =
+            "Backend connection failed.";
+    }
+}
+
+
+refreshDashboard();
+
+
+setInterval(
+    refreshDashboard,
+    10000
+);
+
+</script>
+
+</body>
+</html>
+'@
+
+Set-Content -Path .\frontend\index.html -Value $code -Encoding UTF8
