@@ -1,102 +1,400 @@
-from .. import BaseProvider, ElementsType, date_time
-
-localized = True
+from .. import Provider as AddressProvider
 
 
-class Provider(BaseProvider):
-    city_suffixes: ElementsType[str] = ["Ville"]
-    street_suffixes: ElementsType[str] = ["Street"]
-    city_formats: ElementsType[str] = ("{{first_name}} {{city_suffix}}",)
-    street_name_formats: ElementsType[str] = ("{{last_name}} {{street_suffix}}",)
-    street_address_formats: ElementsType[str] = ("{{building_number}} {{street_name}}",)
-    address_formats: ElementsType[str] = ("{{street_address}} {{postcode}} {{city}}",)
-    building_number_formats: ElementsType[str] = ("##",)
-    postcode_formats: ElementsType[str] = ("#####",)
-    countries: ElementsType[str] = [country.name for country in date_time.Provider.countries]
+class Provider(AddressProvider):
+    # City and States names taken from wikipedia
+    # Street format taken from some common famous places in India
+    # Link for cities: https://en.wikipedia.org/wiki/List_of_cities_in_India_by_population
+    # Link for States: https://en.wikipedia.org/wiki/States_and_union_territories_of_India
+    # Links for street name formats: https://www.mumbai77.com/city/3313/travel/old-new-street-names/
 
-    ALPHA_2 = "alpha-2"
-    ALPHA_3 = "alpha-3"
+    city_formats = ("{{city_name}}",)
 
-    alpha_2_country_codes: ElementsType[str] = [country.alpha_2_code for country in date_time.Provider.countries]
-    alpha_3_country_codes: ElementsType[str] = [country.alpha_3_code for country in date_time.Provider.countries]
+    street_name_formats = (
+        "{{last_name}} Nagar",
+        "{{last_name}} Zila",
+        "{{last_name}} Street",
+        "{{last_name}} Ganj",
+        "{{last_name}} Road",
+        "{{last_name}} Path",
+        "{{last_name}} Marg",
+        "{{last_name}} Chowk",
+        "{{last_name}} Circle",
+        "{{last_name}}",
+    )
 
-    def city_suffix(self) -> str:
-        """
-        :example: 'town'
-        """
-        return self.random_element(self.city_suffixes)
+    street_address_formats = (
+        "{{building_number}}, {{street_name}}",
+        "{{building_number}}\n{{street_name}}",
+    )
 
-    def street_suffix(self) -> str:
-        """
-        :example: 'Avenue'
-        """
-        return self.random_element(self.street_suffixes)
+    address_formats = (
+        "{{street_address}}\n{{city}} {{postcode}}",
+        "{{street_address}}\n{{city}}-{{postcode}}",
+        "{{street_address}}, {{city}} {{postcode}}",
+        "{{street_address}}, {{city}}-{{postcode}}",
+    )
 
-    def building_number(self) -> str:
-        """
-        :example: '791'
-        """
-        return self.numerify(self.random_element(self.building_number_formats))
+    building_number_formats = ("H.No. ###", "###", "H.No. ##", "##", "##/##", "##/###")
 
-    def city(self) -> str:
-        """
-        :example: 'Sashabury'
-        """
-        pattern: str = self.random_element(self.city_formats)
-        return self.generator.parse(pattern)
+    postcode_formats = ("######",)
 
-    def street_name(self) -> str:
-        """
-        :example: 'Crist Parks'
-        """
-        pattern: str = self.random_element(self.street_name_formats)
-        return self.generator.parse(pattern)
+    cities = (
+        "Mumbai",
+        "Delhi",
+        "Kolkata",
+        "Chennai",
+        "Bangalore",
+        "Hyderabad",
+        "Ahmedabad",
+        "Kanpur",
+        "Pune",
+        "Surat",
+        "Jaipur",
+        "Lucknow",
+        "Nagpur",
+        "Indore",
+        "Bhopal",
+        "Ludhiana",
+        "Patna",
+        "Visakhapatnam",
+        "Vadodara",
+        "Agra",
+        "Thane",
+        "Kalyan-Dombivli",
+        "Varanasi",
+        "Ranchi",
+        "Nashik",
+        "Dhanbad",
+        "Faridabad",
+        "Meerut",
+        "Pimpri-Chinchwad",
+        "Howrah",
+        "Allahabad",
+        "Ghaziabad",
+        "Rajkot",
+        "Amritsar",
+        "Jabalpur",
+        "Coimbatore",
+        "Madurai",
+        "Srinagar",
+        "Aurangabad",
+        "Solapur",
+        "Vijayawada",
+        "Jodhpur",
+        "Gwalior",
+        "Guwahati",
+        "Chandigarh",
+        "Hubli–Dharwad",
+        "Mysore",
+        "Tiruchirappalli",
+        "Bareilly",
+        "Jalandhar",
+        "Navi Mumbai",
+        "Salem",
+        "Kota",
+        "Vasai-Virar",
+        "Aligarh",
+        "Moradabad",
+        "Bhubaneswar",
+        "Gorakhpur",
+        "Raipur",
+        "Bhiwandi",
+        "Kochi",
+        "Jamshedpur",
+        "Bhilai",
+        "Amravati",
+        "Cuttack",
+        "Warangal",
+        "Bikaner",
+        "Mira-Bhayandar",
+        "Guntur",
+        "Bhavnagar",
+        "Durgapur",
+        "Kolhapur",
+        "Ajmer",
+        "Asansol",
+        "Ulhasnagar",
+        "Siliguri",
+        "Jalgaon",
+        "Saharanpur",
+        "Jamnagar",
+        "Bhatpara",
+        "Sangli-Miraj & Kupwad",
+        "Kozhikode",
+        "Nanded",
+        "Ujjain",
+        "Dehradun",
+        "Rourkela",
+        "Gulbarga",
+        "Tirunelveli",
+        "Malegaon",
+        "Akola",
+        "Belgaum",
+        "Mangalore",
+        "Bokaro",
+        "South Dumdum",
+        "Udaipur",
+        "Gaya",
+        "Maheshtala",
+        "Jhansi",
+        "Nellore",
+        "Jammu",
+        "Thiruvananthapuram",
+        "Davanagere",
+        "Kollam",
+        "Panihati",
+        "Kurnool",
+        "Tiruppur",
+        "Dhule",
+        "Bhagalpur",
+        "Rajpur Sonarpur",
+        "Kakinada",
+        "Thrissur",
+        "Bellary",
+        "Muzaffarnagar",
+        "Korba",
+        "Rajahmundry",
+        "Kamarhati",
+        "Ambattur",
+        "Berhampur",
+        "Ahmednagar",
+        "Muzaffarpur",
+        "Noida",
+        "Patiala",
+        "Mathura",
+        "New Delhi",
+        "Latur",
+        "Sambalpur",
+        "Shahjahanpur",
+        "Kulti",
+        "Chandrapur",
+        "Nizamabad",
+        "Rohtak",
+        "Bardhaman",
+        "Rampur",
+        "Bhilwara",
+        "Firozabad",
+        "Bilaspur",
+        "Shimoga",
+        "Agartala",
+        "Gopalpur",
+        "Darbhanga",
+        "Panipat",
+        "Bally",
+        "Alwar",
+        "Parbhani",
+        "Ichalkaranji",
+        "Anantapuram",
+        "Baranagar",
+        "Tumkur",
+        "Ramagundam",
+        "Jalna",
+        "Durg",
+        "Sagar",
+        "Bihar Sharif",
+        "Dewas",
+        "Barasat",
+        "Avadi",
+        "Farrukhabad",
+        "Aizawl",
+        "Tirupati",
+        "Bijapur",
+        "Satara",
+        "Satna",
+        "Ratlam",
+        "Imphal",
+        "Pondicherry",
+        "North Dumdum",
+        "Anantapur",
+        "Khammam",
+        "Ozhukarai",
+        "Bathinda",
+        "Thoothukudi",
+        "Thanjavur",
+        "Naihati",
+        "Sonipat",
+        "Mau",
+        "Tiruvottiyur",
+        "Hapur",
+        "Sri Ganganagar",
+        "Karnal",
+        "Etawah",
+        "Nagercoil",
+        "Raichur",
+        "Raurkela Industrial Township",
+        "Secunderabad",
+        "Karimnagar",
+        "Mirzapur",
+        "Bharatpur",
+        "Ambarnath",
+        "Arrah",
+        "Uluberia",
+        "Serampore",
+        "Dindigul",
+        "Gandhinagar",
+        "Burhanpur",
+        "Nadiad",
+        "Eluru",
+        "Yamunanagar",
+        "Kharagpur",
+        "Munger",
+        "Pali",
+        "Katni",
+        "Singrauli",
+        "Tenali",
+        "Sikar",
+        "Silchar",
+        "Rewa",
+        "Sambhal",
+        "Machilipatnam",
+        "Vellore",
+        "Alappuzha",
+        "Bulandshahr",
+        "Haridwar",
+        "Vijayanagaram",
+        "Erode",
+        "Gurgaon",
+        "Bidar",
+        "Bhusawal",
+        "Khandwa",
+        "Purnia",
+        "Haldia",
+        "Chinsurah",
+        "Bhiwani",
+        "Raebareli",
+        "Junagadh",
+        "Bahraich",
+        "Gandhidham",
+        "Mango",
+        "Raiganj",
+        "Amroha",
+        "Sultan Pur Majra",
+        "Hospet",
+        "Bidhannagar",
+        "Malda",
+        "Sirsa",
+        "Berhampore",
+        "Jaunpur",
+        "Surendranagar Dudhrej",
+        "Madhyamgram",
+        "Kirari Suleman Nagar",
+        "Bhind",
+        "Nandyal",
+        "Chittoor",
+        "Bhalswa Jahangir Pur",
+        "Fatehpur",
+        "Morena",
+        "Nangloi Jat",
+        "Ongole",
+        "Karawal Nagar",
+        "Shivpuri",
+        "Morbi",
+        "Unnao",
+        "Pallavaram",
+        "Kumbakonam",
+        "Shimla",
+        "Mehsana",
+        "Panchkula",
+        "Orai",
+        "Ambala",
+        "Dibrugarh",
+        "Guna",
+        "Danapur",
+        "Sasaram",
+        "Anand",
+        "Kottayam",
+        "Hazaribagh",
+        "Kadapa",
+        "Saharsa",
+        "Nagaon",
+        "Loni",
+        "Hajipur",
+        "Dehri",
+        "Bettiah",
+        "Katihar",
+        "Deoghar",
+        "Jorhat",
+        "Siwan",
+        "Panvel",
+        "Hosur",
+        "Tinsukia",
+        "Bongaigaon",
+        "Motihari",
+        "Jamalpur",
+        "Suryapet",
+        "Begusarai",
+        "Miryalaguda",
+        "Proddatur",
+        "Karaikudi",
+        "Kishanganj",
+        "Phusro",
+        "Buxar",
+        "Tezpur",
+        "Jehanabad",
+        "Aurangabad",
+        "Chapra",
+        "Ramgarh",
+        "Gangtok",
+        "Adoni",
+        "Amaravati",
+        "Ballia",
+        "Bhimavaram",
+        "Dharmavaram",
+        "Giridih",
+        "Gudivada",
+        "Guntakal",
+        "Hindupur",
+        "Kavali",
+        "Khora ",
+        "Ghaziabad",
+        "Madanapalle",
+        "Mahbubnagar",
+        "Medininagar",
+        "Narasaraopet",
+        "Phagwara",
+        "Pudukkottai",
+        "Srikakulam",
+        "Tadepalligudem",
+        "Tadipatri",
+        "Udupi",
+    )
 
-    def street_address(self) -> str:
-        """
-        :example: '791 Crist Parks'
-        """
-        pattern: str = self.random_element(self.street_address_formats)
-        return self.generator.parse(pattern)
+    states = (
+        "Andhra Pradesh",
+        "Arunachal Pradesh",
+        "Assam",
+        "Bihar",
+        "Chhattisgarh",
+        "Goa",
+        "Gujarat",
+        "Haryana",
+        "Himachal Pradesh",
+        "Jharkhand",
+        "Karnataka",
+        "Kerala",
+        "Madhya Pradesh",
+        "Maharashtra",
+        "Manipur",
+        "Meghalaya",
+        "Mizoram",
+        "Nagaland",
+        "Odisha",
+        "Punjab",
+        "Rajasthan",
+        "Sikkim",
+        "Tamil Nadu",
+        "Telangana",
+        "Tripura",
+        "Uttar Pradesh",
+        "Uttarakhand",
+        "West Bengal",
+    )
 
-    def postcode(self) -> str:
-        """
-        :example: 86039-9874
-        """
-        return self.bothify(self.random_element(self.postcode_formats)).upper()
+    def city_name(self) -> str:
+        return self.random_element(self.cities)
 
-    def address(self) -> str:
-        """
-        :example: '791 Crist Parks, Sashabury, IL 86039-9874'
-        """
-        pattern: str = self.random_element(self.address_formats)
-        return self.generator.parse(pattern)
+    def administrative_unit(self) -> str:
+        return self.random_element(self.states)
 
-    def country(self) -> str:
-        return self.random_element(self.countries)
-
-    def country_code(self, representation: str = ALPHA_2) -> str:
-        if representation == self.ALPHA_2:
-            return self.random_element(self.alpha_2_country_codes)
-        elif representation == self.ALPHA_3:
-            return self.random_element(self.alpha_3_country_codes)
-        else:
-            raise ValueError("`representation` must be one of `alpha-2` or `alpha-3`.")
-
-    def current_country_code(self) -> str:
-        try:
-            return self.__lang__.split("_")[1]  # type: ignore
-        except IndexError:
-            raise AttributeError("Country code cannot be determined from locale")
-
-    def current_country(self) -> str:
-        current_country_code = self.current_country_code()
-        current_country = [
-            country.name for country in date_time.Provider.countries if country.alpha_2_code == current_country_code
-        ]
-        if len(current_country) == 1:
-            return current_country[0]  # type: ignore
-        elif len(current_country) > 1:
-            raise ValueError(f"Ambiguous country for country code {current_country_code}: {current_country}")
-        else:
-            raise ValueError(f"No appropriate country for country code {current_country_code}")
+    state = administrative_unit
